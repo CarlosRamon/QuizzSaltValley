@@ -34,7 +34,41 @@ const questions = [
       { id: 'c', text: 'Integração entre startups, empresas, universidades, governo e ambientes de inovação', isCorrect: true },
     ],
   },
+  {
+    id: 4,
+    question: 'O que caracteriza uma startup?',
+    options: [
+      { id: 'a', text: 'Uma empresa tradicional que opera em mercado consolidado' },
+      { id: 'b', text: 'Uma organização temporária em busca de um modelo de negócio escalável e repetível', isCorrect: true },
+      { id: 'c', text: 'Uma multinacional de tecnologia com grande número de funcionários' },
+      { id: 'd', text: 'Uma empresa pública de capital aberto' },
+    ],
+  },
+  {
+    id: 5,
+    question: 'Qual estratégia ajuda uma startup a validar seu modelo de negócio antes de buscar investimentos grandes?',
+    options: [
+      { id: 'a', text: 'Contratar vários funcionários rapidamente' },
+      { id: 'b', text: 'Criar um produto final completo antes de testar' },
+      { id: 'c', text: 'Utilizar MVPs (Mínimos Produtos Viáveis) e feedback de usuários', isCorrect: true },
+      { id: 'd', text: 'Aumentar o preço para medir a demanda' },
+    ],
+  },
+  {
+    id: 6,
+    question: 'Em mercados emergentes como o do Rio Grande do Norte, qual fator é mais desafiador para mensurar o Product-Market Fit?',
+    options: [
+      { id: 'a', text: 'Falta de concorrência direta' },
+      { id: 'b', text: 'Limitações de infraestrutura e menor maturidade do ecossistema de inovação', isCorrect: true },
+      { id: 'c', text: 'Excesso de investimento internacional' },
+      { id: 'd', text: 'Saturação de produtos tecnológicos' },
+    ],
+    isBonus: true,
+  },
 ]
+
+// Número mínimo de perguntas para conquistar o selo
+const MIN_QUESTIONS_FOR_BADGE = 5
 
 const Quiz = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0)
@@ -45,6 +79,7 @@ const Quiz = () => {
   const [answeredQuestions, setAnsweredQuestions] = useState([])
   const [showChallenge, setShowChallenge] = useState(true)
   const [challengeCompleted, setChallengeCompleted] = useState(false)
+  const [badgeEarned, setBadgeEarned] = useState(false)
 
   // Reiniciar o jogo
   const resetGame = () => {
@@ -56,6 +91,7 @@ const Quiz = () => {
     setAnsweredQuestions([])
     setShowChallenge(true)
     setChallengeCompleted(false)
+    setBadgeEarned(false)
   }
 
   // Quando o desafio é completado
@@ -84,6 +120,21 @@ const Quiz = () => {
       questionId: questions[currentQuestion].id,
       isCorrect: option?.isCorrect || false,
     }])
+
+    // Verificar se conquistou o selo (acertou todas as 5 primeiras perguntas)
+    const nextQuestionIndex = currentQuestion + 1
+    
+    // Se completou a 5ª pergunta, verifica se conquistou o selo
+    if (nextQuestionIndex === MIN_QUESTIONS_FOR_BADGE) {
+      const mainQuestionsScore = answeredQuestions
+        .filter((_, idx) => idx < MIN_QUESTIONS_FOR_BADGE - 1)
+        .filter(q => q.isCorrect).length
+      const totalMainScore = mainQuestionsScore + (option?.isCorrect ? 1 : 0)
+      
+      if (totalMainScore === MIN_QUESTIONS_FOR_BADGE) {
+        setBadgeEarned(true)
+      }
+    }
 
     // Avançar para próxima pergunta após 1.5 segundos
     setTimeout(() => {
@@ -131,10 +182,29 @@ const Quiz = () => {
 
   // Se o jogo foi completado, mostrar tela de sucesso
   if (gameCompleted) {
+    // Calcular score das perguntas principais (5 primeiras)
+    const mainScore = answeredQuestions
+      .filter((_, idx) => idx < MIN_QUESTIONS_FOR_BADGE)
+      .filter(q => q.isCorrect).length
+    const bonusScore = answeredQuestions
+      .filter((_, idx) => idx >= MIN_QUESTIONS_FOR_BADGE)
+      .filter(q => q.isCorrect).length
+    
+    const earnedBadge = mainScore === MIN_QUESTIONS_FOR_BADGE
+    const earnedBonus = bonusScore > 0 && answeredQuestions[answeredQuestions.length - 1]?.isCorrect
+    
     return (
       <>
-        {score === questions.length && <Confetti />}
-        <SuccessScreen score={score} totalQuestions={questions.length} onRestart={resetGame} />
+        {earnedBadge && <Confetti />}
+        <SuccessScreen 
+          score={score} 
+          totalQuestions={questions.length}
+          mainScore={mainScore}
+          bonusScore={bonusScore}
+          earnedBadge={earnedBadge}
+          earnedBonus={earnedBonus}
+          onRestart={resetGame} 
+        />
       </>
     )
   }
@@ -196,6 +266,20 @@ const Quiz = () => {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
+            {questions[currentQuestion].isBonus && badgeEarned && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-gorn-pink via-salt-yellow to-gorn-cyan rounded-xl p-4 mb-4 text-center"
+              >
+                <p className="text-white font-bold text-lg">
+                  🎁 Pergunta Bônus - Prêmio Extra!
+                </p>
+                <p className="text-white/90 text-sm mt-1">
+                  Você já conquistou o selo! Esta pergunta vale um prêmio extra.
+                </p>
+              </motion.div>
+            )}
             <QuizQuestion
               question={questions[currentQuestion]}
               selectedAnswer={selectedAnswer}

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 
-const SuccessScreen = ({ score, totalQuestions, onRestart }) => {
+const SuccessScreen = ({ score, totalQuestions, mainScore, bonusScore, earnedBadge, earnedBonus, onRestart }) => {
   const allCorrect = score === totalQuestions
 
   return (
@@ -10,7 +10,7 @@ const SuccessScreen = ({ score, totalQuestions, onRestart }) => {
       transition={{ duration: 0.5 }}
       className="bg-white rounded-2xl shadow-2xl p-8 md:p-12 max-w-2xl w-full text-center"
     >
-      {allCorrect ? (
+      {earnedBadge ? (
         <>
           <motion.div
             initial={{ scale: 0 }}
@@ -51,9 +51,27 @@ const SuccessScreen = ({ score, totalQuestions, onRestart }) => {
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 md:p-6 mb-6">
-              <p className="text-sm md:text-base text-gray-700">
+              <p className="text-sm md:text-base text-gray-700 mb-3">
                 <strong>Você conquistou o selo da Salt Valley!</strong>
                 <br />
+                Você acertou {mainScore} de {mainScore === 5 ? '5' : '5'} perguntas principais.
+              </p>
+              {earnedBonus && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="bg-gradient-to-r from-gorn-pink/20 to-gorn-cyan/20 border-2 border-gorn-pink rounded-lg p-4 mt-4"
+                >
+                  <p className="text-lg font-bold text-gorn-pink mb-2">
+                    🎁 Prêmio Extra Conquistado!
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    Você também acertou a pergunta bônus e conquistou um prêmio extra!
+                  </p>
+                </motion.div>
+              )}
+              <p className="text-sm md:text-base text-gray-600 mt-4">
                 Continue explorando o ecossistema de inovação potiguar e conecte-se com pessoas, ideias e oportunidades no Go!RN.
               </p>
             </div>
@@ -69,9 +87,17 @@ const SuccessScreen = ({ score, totalQuestions, onRestart }) => {
             Você acertou <strong>{score}</strong> de <strong>{totalQuestions}</strong> perguntas.
           </p>
           <div className="bg-yellow-50 rounded-lg p-6 mb-6">
+            <p className="text-base md:text-lg text-gray-700 mb-2">
+              Você acertou <strong>{mainScore || score}</strong> de <strong>5</strong> perguntas principais.
+            </p>
             <p className="text-base md:text-lg text-gray-700">
               Tente novamente para conquistar o selo <strong>SALT2025</strong> e use no app oficial do Go!RN!
             </p>
+            {mainScore === 5 && !earnedBadge && (
+              <p className="text-sm text-gray-600 mt-2">
+                Você acertou todas as 5 perguntas principais! Conquiste o selo respondendo todas corretamente em uma única tentativa.
+              </p>
+            )}
           </div>
         </>
       )}
